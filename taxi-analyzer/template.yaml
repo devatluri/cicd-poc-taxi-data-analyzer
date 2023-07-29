@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: A taxi data analyzer lambda function - cicd poc demo
+Resources:
+  CicdPocTaxiAnalyzerFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: taxi-data-analyzer.lambda_handler
+      FunctionName: taxi-analyzer-lambda
+      Runtime: python3.7
+      CodeUri: build/
+      Description: ''
+      MemorySize: 2048
+      Timeout: 300
+      Role: !GetAtt CicdPocTaxiAnalyzerLambdaExecutionRole.Arn
+      Layers:
+        - !Ref PandasLayerLambda
+
+  CicdPocTaxiAnalyzerLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+        RoleName: taxi-analyzer-lambda-role-us-east-1
+        ManagedPolicyArns:
+            - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+            - "arn:aws:iam::aws:policy/AmazonSSMFullAccess"
+            - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+        AssumeRolePolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+               - Action:
+                    - "sts:AssumeRole"
+                 Effect: Allow
+                 Principal:
+                    Service:
+                       - "lambda.amazonaws.com"
+                       
+  PandasLayerLambda:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: s3://cicd-poc-code-artifacts-bucket-us-east-1/lambda-layers/pandas.zip
+      CompatibleRuntimes:
+        - python3.7
+    Metadata:
+      BuildMethod: makefile
+
+Outputs:
+  CicdPocTaxiAnalyzerFunction:
+    Description: "Taxi Analyzer Lambda Function ARN"
+    Value: !GetAtt CicdPocTaxiAnalyzerFunction.Arn
+
+  CicdPocTaxiAnalyzerIamRole:
+    Description: "Implicit IAM Role created for Python Addition function"
+    Value: !GetAtt CicdPocTaxiAnalyzerLambdaExecutionRole.Arn

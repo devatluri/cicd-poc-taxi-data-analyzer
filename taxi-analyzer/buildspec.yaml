@@ -1,0 +1,36 @@
+﻿# Buildspec Reference Doc: https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html
+
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "[+] Scanning for security vulnerability within dependencies"
+      # - pipenv check (if pipenv is installed and a Pipfile is in place)
+      # - Alternatively: https://www.owasp.org/index.php/OWASP_Dependency_Check
+  pre_build:
+    commands:
+      - pip install pytest requests
+      - echo "[+] Running tests..."
+
+  build:
+    commands:
+      - echo "[+] Installing dependencies...."
+      - pwd
+      - ls
+      - pip install -r ./taxi-analyzer/requirements.txt -t taxi-analyzer/build/
+      - cp taxi-analyzer/src/*.py taxi-analyzer/build/
+      - echo "Starting SAM packaging `date` in `pwd`"
+      - aws cloudformation package --template-file ./taxi-analyzer/template.yaml --s3-bucket cicd-poc-code-artifacts-bucket-us-east-1 --output-template-file packaged-taxi-analyzer.yaml
+  post_build:
+    commands:
+      - echo "SAM packaging completed on `date`"
+
+artifacts:
+  files:
+    - packaged-taxi-analyzer.yaml
+  discard-paths: yes
+
+cache:
+  paths:
+    - '/root/.cache/pip'

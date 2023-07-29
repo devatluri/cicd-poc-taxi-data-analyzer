@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Serverless Specification template describing your function.
+Resources:
+  CicdPocTaxiAnalyzerFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: taxi-data-analyzer.lambda_handler
+      FunctionName: taxi-analyzer-lambda
+      Runtime: python3.7
+      CodeUri: build/
+      Description: ''
+      MemorySize: 2048
+      Timeout: 3
+      Role: arn:aws:iam::096002066078:role/taxi-analyzer-lambda-role
+      Layers:
+        - 'arn:aws:lambda:ap-south-1:096002066078:layer:pandas:1'
+
+
+Outputs:
+  CicdPocTaxiAnalyzerFunction:
+    Description: "Taxi Analyzer Lambda Function ARN"
+    Value: !GetAtt CicdPocTaxiAnalyzerFunction.Arn
+
+  CicdPocTaxiAnalyzerIamRole:
+    Description: "Implicit IAM Role created for Python Addition function"
+    Value: !GetAtt CicdPocTaxiAnalyzerFunction.Arn
